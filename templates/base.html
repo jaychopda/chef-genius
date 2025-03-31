@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Pooja - Inventory Management</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+
+
+    
+    <style>
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 300px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .card img {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .card h3 {
+            margin: 16px 0 8px;
+        }
+        .card p {
+            color: #555;
+        }
+        #cart-btn{
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        #cart-toggle {
+            margin: 20px 0;
+            padding: 5px 10px;
+            height: 50px;
+            width: 150px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        #cart-toggle:hover {
+            background-color: #0056b3;
+        }
+        .cart {
+            z-index: 1000;
+        }
+        
+        :root {
+            --primary-color: #3B82F6;
+            --sidebar-bg: #1a1f2e;
+            --text-light: #ffffff;
+            --text-dark: #1a1f2e;
+            --border-color: #e5e7eb;
+            --status-sufficient: #10B981;
+            --status-low: #F59E0B;
+            --status-expiring: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+
+        .nav-items {
+            list-style: none;
+        }
+
+        .nav-items li {
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-items li.active {
+            background-color: #007bff; /* Blue color for active item */
+            color: white;
+        }
+
+        .nav-items li button {
+            background: none;
+            border: none;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            padding: 0;
+            outline: inherit;
+            width: 100%;
+            text-align: left;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background-color: #f9fafb;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            color: var(--text-dark);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .search-bar select {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            min-width: 150px;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .inventory-table th,
+        .inventory-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .inventory-table th {
+            background-color: #f8fafc;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-sufficient {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--status-sufficient);
+        }
+
+        .status-low {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--status-low);
+        }
+
+        .status-expiring {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--status-expiring);
+        }
+
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .menu-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .menu-item h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .menu-item p {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .price {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .cart {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .cart h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        #cart-items {
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-name {
+            flex: 1;
+        }
+
+        .cart-item-price {
+            color: #2ecc71;
+            margin: 0 10px;
+        }
+
+        .cart-item button {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            margin-left: 10px;
+        }
+
+        .cart-item button:hover {
+            background-color: #c0392b;
+        }
+
+        .cart-total {
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+        }
+
+        .cart-total h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .cart-total button {
+            background-color: #2ecc71;
+        }
+
+        .cart-total button:hover {
+            background-color: #27ae60;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            color: #f97316;
+        }
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .nav-items {
+            list-style: none;
+        }
+
+        .nav-items li {
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background-color: #f9fafb;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            color: var(--text-dark);
+        }
+
+        /* Dashboard Styles */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-card h3 {
+            color: var(--text-dark);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .trend {
+            font-size: 0.875rem;
+        }
+
+        .trend.positive {
+            color: var(--green);
+        }
+
+        .trend.negative {
+            color: var(--red);
+        }
+
+        /* Menu Styles */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .menu-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+        }
+
+        #cartCount {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--red);
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+        }
+
+        /* Orders Styles */
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .order-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .order-status.pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .order-status.completed {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        /* Inventory Styles */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .inventory-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stock-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .stock-status.low {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .stock-status.good {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        /* Waste Analysis Styles */
+        .waste-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        /* Button Styles */
+        button {
+            background-color: var(--purple);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .accept-btn {
+            background-color: var(--green);
+        }
+
+        .reject-btn {
+            background-color: var(--red);
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo" style = "position:fixed">Chef Genius</div>
+            <ul class="nav-items" style = "position:fixed; margin-top:50px">
+                <li onclick="setActive(this)" class="{% if request.path == '/' %}active{% endif %}">
+                    <button onclick="window.location.href='/'"><span class="icon">📊</span> Dashboard</button>
+                </li>
+
+                
+                <li onclick="setActive(this)" class="{% if request.path == '/order' %}active{% endif %}">
+                    <button onclick="window.location.href='/order'"><span class="icon">📝</span> Orders</button>
+                </li>
+
+
+                <li onclick="setActive(this)" class="{% if request.path == '/invetory/' %}active{% endif %}">
+                    <button onclick="window.location.href='/invetory'"><span class="icon">📦</span> Inventory</button>
+                </li>
+
+
+                <li onclick="setActive(this)" class="{% if request.path == '/waste-analysis' %}active{% endif %}">
+                    <button onclick="window.location.href='/waste-analysis'"><span class="icon">🗑</span> Waste Analysis</button>
+                </li>
+
+
+                <li onclick="setActive(this)" class="{% if request.path == '/menu' %}active{% endif %}">
+                    <button onclick="window.location.href='/menu'"><span class="icon">🍽</span> Menu</button>
+                </li>
+
+                <li onclick="setActive(this)" class="{% if request.path == '/update-log' %}active{% endif %}">
+                    <button onclick="window.location.href='/update-log'"><span class="icon">📦</span> Add Today's Log</button>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            {%block content%}
+
+            {% endblock content%}
+        </main>
+    </div>
+</body>
+<script>
+    // Navigation
+    document.querySelectorAll('.nav-items li').forEach(item => {
+        item.addEventListener('click', () => {
+            item.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        });
+    });
+
+    function setActive(element) {
+        document.querySelectorAll('.nav-items li').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        element.classList.add('active');
+    }
+
+    {% comment %} document.querySelectorAll('.nav-items li').forEach(item => {
+        const button = item.querySelector('button');
+        if (button && button.getAttribute('onclick').includes(window.location.pathname)) {
+            item.classList.add('active');
+        }
+    }); {% endcomment %}
+</script>
+
+</html>

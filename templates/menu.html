@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table class="inventory-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>NAME</th>
+            <th>STOCK</th>
+            <th>PRICE</th>
+        </tr>
+    </thead>
+    <tbody id="inventoryTableBody">
+        {% for item in mylist %}
+
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</table>
+
+{% endblock content %}

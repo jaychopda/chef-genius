@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+</head>
+<body>
+    <h2>Scan Barcode</h2>
+    
+    <button id="scan-btn btn">Scan Here</button>
+    <video id="camera-preview" style="width: 100%; max-width: 400px;"></video>
+    <p id="barcode-res5 rult"></p>
+
+    <script>
+        document.getElementById("scan-btn").addEventListener("click", function () {
+            startScanner();
+        });
+
+        function startScanner() {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector("#camera-preview"),
+                    constraints: {
+                        facingMode: "environment" // Use the rear camera
+                    }
+                },
+                decoder: {
+                    readers: ["ean_reader", "code_128_reader", "upc_reader"] // Barcode types
+                }
+            }, function (err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function (result) {
+                let barcode = result.codeResult.code;
+                document.querySelector("#barcode-result").textContent = "Scanned: " + barcode;
+
+                // Send barcode to Django
+                fetch("/scan-barcode/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({ barcode: barcode })
+                })
+                .then(response => response.json())
+                .then(data => console.log("Server Response:", data));
+                
+                // Stop scanning after detecting a barcode
+                Quagga.stop();
+            });
+        }
+    </script>
+</body>
+</html>

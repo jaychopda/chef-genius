@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Scan a Barcode</h2>
+    <div id="reader" style="width: 300px;"></div>  
+    <p id="barcode-result"></p>
+    <button id="start-camera-btn" onclick="startScanner()" style="display: none;background-color:#4CAF50;margin-bottom:10px">Start Camera</button>
+    <button onclick="stopScanner()" style = "background-color:#4CAF50"
+    >Stop Camera</button>
+
+    <h3>Or Upload an Image</h3>
+    <input type="file" id="barcode-image" accept="image/*">
+    <button onclick="processUploadedImage()" style = "background-color:#4CAF50">Process Image</button>
+
+    <script>
+        let html5QrCode;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById("barcode-result").innerText = "Barcode: " + decodedText;
+            processBarcode(decodedText);
+            // Stop the camera after successfully scanning
+            html5QrCode.stop().then(() => {
+                console.log("Camera stopped successfully.");
+            }).catch(err => {
+                console.error("Error stopping the camera:", err);
+            });
+
+            // Process the barcode number
+            
+        }
+
+        function processBarcode(barcode) {
+            fetch("/scan-barcode", {
+                method: "POST",
+                body: JSON.stringify({ barcode: barcode }),
+                headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Barcode Processed Successfully: " + JSON.stringify(data));
+                } else {
+                    alert("Processing Barcode: " + data.message);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                let cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + "=")) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function startScanner() {
+            document.getElementById("start-camera-btn").style.display = "none";
+            html5QrCode = new Html5Qrcode("reader");
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { 
+                    fps: 20, // Increased fps for better detection
+                    qrbox: { width: 350, height: 150 } // Adjusted qrbox size for improved accuracy
+                },
+                onScanSuccess,
+                (errorMessage) => { 
+                    console.warn("Scanning Error:", errorMessage); // Changed to warn for better debugging
+                }
+            ).catch(err => {
+                console.error("Camera Initialization Error:", err);
+                alert("Unable to access the camera. Please check permissions or try a different browser.");
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    console.log("Camera stopped successfully.");
+                    document.getElementById("start-camera-btn").style.display = "inline-block";
+                }).catch(err => {
+                    console.error("Error stopping the camera:", err);
+                });
+            } else {
+                alert("Scanner is not running.");
+            }
+        }
+
+        function processUploadedImage() {
+            const fileInput = document.getElementById("barcode-image");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please upload an image.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            fetch("/process-uploaded-barcode", {
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": getCookie("csrftoken") }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Barcode Processed: " + data.barcode);
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        window.onload = function () {
+            console.log("Initializing Scanner...");
+            startScanner();
+        };
+    </script>
+{% endblock content %}

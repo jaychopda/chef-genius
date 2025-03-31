@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <main class="main-content">
+            <div class="header">
+                <h1>Dashboard</h1>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Today's Revenue</h3>
+                    <div class="amount">₹{{ daily_sales.1 }}</div> <!-- Updated to display total revenue -->
+                    {% comment %} <div class="trend positive">↑ 12% from yesterday</div> {% endcomment %}
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Total Orders</h3>
+                    <div class="amount">{{ daily_sales.0 }}</div> <!-- Updated to display total orders -->
+                    {% comment %} <div class="trend positive">↑ 8% from yesterday</div> {% endcomment %}
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Average Order Value</h3>
+                    <div class="amount">₹<script>document.write(Math.round({{ daily_sales.2 }}));</script></div>
+ <!-- Updated to display average order value -->
+                    {% comment %} <div class="trend negative">↓ 3% from yesterday</div> {% endcomment %}
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Revenue Trend</h2>
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="dashboard.js"></script> -->
+    <script>
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [12000, 19000, 15000, 17000, 22000, 25000, 20000],
+                    borderColor: '#8B5CF6',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return '₹' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-items li').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.textContent.trim().toLowerCase().replace(' ', '-');
+                if (page === 'dashboard') {
+                    window.location.href = 'dashboard.html';
+                } else if (page === 'orders') {
+                    window.location.href = 'orders.html';
+                } else if (page === 'inventory') {
+                    window.location.href = 'inventory.html';
+                } else if (page === 'waste-analysis') {
+                    window.location.href = 'waste-analysis.html';
+                } else if (page === 'menu') {
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    </script>
+{% endblock content %}

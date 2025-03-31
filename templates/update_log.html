@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Log</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Material Name</th>
+                <th>Remaining Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for name, stock in mylist %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ stock }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    
+{% endblock content %}

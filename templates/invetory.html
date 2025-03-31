@@ -1,0 +1,93 @@
+    {% extends "base.html" %}
+
+    {% block content %}
+{% comment %} <div class="container"> {% endcomment %}
+    <h1>Inventory Data</h1>
+    <table class="table table-bordered">
+        <header class="header">
+            <h1>Inventory Management</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="scanItems" onclick="window.location.href='/scanner'">
+                    <span class="icon">📸</span> Scan Items
+                </button>
+                <button class="btn btn-secondary" id="refresh">
+                    <span class="icon">🔄</span> Refresh
+                </button>
+            </div>
+        </header>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search inventory by name..." oninput="searchTable()">
+            <select id="statusFilter" onchange="filterTable()">
+                <option value="all">All Status</option>
+                <option value="out-of-stock">Out of Stock</option>
+                <option value="low-stock">Low Stock</option>
+                <option value="in-stock">In Stock</option>
+            </select>
+        </div>
+
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>STOCK</th>
+                    <th>STATUS</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+                {% for item in mylist %}
+                <tr class="
+                    {% if item.stock == 0 %}out-of-stock{% elif item.stock < 150 %}low-stock{% else %}in-stock{% endif %}
+                ">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.stock }}</td>
+                    <td>
+                        {% if item.stock == 0 %}
+                            <span style="color: red;">Out of Stock</span>
+                        {% elif item.stock < 150 %}
+                            <span style="color: orange;">Low Stock</span>
+                        {% else %}
+                            <span style="color: green;">In Stock</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </table>
+
+    <script>
+        function filterTable() {
+            const filter = document.getElementById("statusFilter").value;
+            const rows = document.querySelectorAll("#inventoryTableBody tr");
+
+            rows.forEach(row => {
+                if (filter === "all") {
+                    row.style.display = "";
+                } else if (!row.classList.contains(filter)) {
+                    row.style.display = "none";
+                } else {
+                    row.style.display = "";
+                }
+            });
+        }
+
+        function searchTable() {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const rows = document.querySelectorAll("#inventoryTableBody tr");
+
+            rows.forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase();
+                if (name.includes(searchValue)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+    </script>
+{% comment %} </div> {% endcomment %}
+
+{% endblock content %}

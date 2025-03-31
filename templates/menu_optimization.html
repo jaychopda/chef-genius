@@ -1,0 +1,153 @@
+
+
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="menu">
+            <h1>Today's Menu</h1>
+            <div class="menu-items card-container">
+                <div class="menu-item card">
+                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" alt="Burger">
+                    <h3>Burger</h3>
+                    <p>Classic beef burger with cheese</p>
+                    <div class="price">₹199</div>
+                    <button id = 'cart-btn' onclick="addToCart('Burger', 199)">Add to Cart</button>
+                </div>
+                <div class="menu-item card">
+                    <img src="https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=500" alt="Pizza">
+                    <h3>Pizza</h3>
+                    <p>Margherita with fresh basil</p>
+                    <div class="price">₹299</div>
+                    <button id = 'cart-btn' onclick="addToCart('Pizza', 299)">Add to Cart</button>
+                </div>
+                <div class="menu-item card">
+                    <img src="https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500" alt="Sandwich">
+                    <h3>Sandwich</h3>
+                    <p>Grilled chicken sandwich</p>
+                    <div class="price">₹149</div>
+                    <button id = 'cart-btn' onclick="addToCart('Sandwich', 149)">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="cart-toggle" onclick="window.location.href='/cart'">🛒 My Cart</button>
+
+        <div class="cart" id="cart" style="display: none; position: absolute; top: 100px; right: 20px; width: 300px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <h2>Your Cart</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total">
+                <h3>Total: ₹<span id="total">0</span></h3>
+                <button onclick="checkout()">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function addToCart(name, price) {
+            const existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ name, price, quantity: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart)); // Save cart to localStorage
+            updateCart();
+            showNotification(`${name} added to cart!`);
+        }
+
+        function removeFromCart(name) {
+            cart = cart.filter(item => item.name !== name);
+            localStorage.setItem('cart', JSON.stringify(cart)); // Update localStorage
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const totalElement = document.getElementById('total');
+
+            if (!cartItems || !totalElement) return; // Skip if cart elements are not present
+
+            cartItems.innerHTML = '';
+            let total = 0;
+
+            cart.forEach(item => {
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <span class="cart-item-name">${item.name} (x${item.quantity})</span>
+                    <span class="cart-item-price">₹${item.price * item.quantity}</span>
+                    <button onclick="removeFromCart('${item.name}')">Remove</button>
+                `;
+                cartItems.appendChild(cartItem);
+                total += item.price * item.quantity;
+            });
+
+            totalElement.textContent = total;
+        }
+
+        function toggleCart() {
+            const cart = document.getElementById('cart');
+            cart.style.display = cart.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            fetch("/process-cart/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(cart)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Order placed successfully!");
+                    cart = [];
+                    updateCart();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while processing your order.");
+            });
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #2ecc71;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                z-index: 1000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', updateCart); // Update cart on page load
+    </script>
+
+{% endblock content %}
